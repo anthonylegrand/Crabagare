@@ -10,6 +10,8 @@ const client = new Client({
 });
 client.commands = new Collection();
 
+require("./database/");
+
 require("./Commands/")(client);
 require("./Events/")(client);
 
