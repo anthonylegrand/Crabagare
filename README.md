@@ -1,7 +1,8 @@
-#Crabaggare - Discord Bot
+# Crabaggare - Discord Bot
+
 Le Bot Discord controle un jeux piloté par messages et commandes Discord. Il consiste à simuler des combats entre différents villages de crabes virtuelles.
 
-####Arguments
+#### Arguments
 
 - --deploy-commands
   _(Mettre à jours toutes les commandes du **Crabaggare** sur les APIs Discord)_
