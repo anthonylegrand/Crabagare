@@ -17,7 +17,7 @@ module.exports = (sequelize) => {
         defaultValue: 0,
         allowNull: false,
         validate: {
-          min: 1,
+          min: 0,
         },
       },
     },
