@@ -1,19 +1,28 @@
 require("dotenv").config();
-const { Client } = require("pg");
+const fs = require("fs");
+const path = require("path");
+const Sequelize = require("sequelize");
+require("pg");
 
-const clientPostgres = new Client({
-  host: process.env.DATABASE_HOST,
-  port: process.env.DATABASE_PORT,
-  user: process.env.DATABASE_USER,
-  database: process.env.DATABASE_DATABASE,
-  password: process.env.DATABASE_PASSWORD,
+const sequelize = new Sequelize(
+  process.env.DATABASE_DATABASE,
+  process.env.DATABASE_USER,
+  process.env.DATABASE_PASSWORD,
+  {
+    host: process.env.DATABASE_HOST,
+    port: process.env.DATABASE_PORT,
+    dialect: process.env.DATABASE_DIALECT,
+    logging: false,
+  }
+);
+
+["models", "associations", "pivots"].map((paths) => {
+  const fullPath = path.join(__dirname, paths);
+  fs.readdirSync(fullPath).map((file) => {
+    require(path.join(fullPath, file))(sequelize);
+  });
 });
 
-clientPostgres
-  .connect()
-  .then(() => {
-    console.log("PostgresSQL connected");
-  })
-  .catch((err) => console.error("PostgresSQL connection error", err.stack));
+require("./initialise")(sequelize);
 
-module.exports = clientPostgres;
+module.exports = sequelize;
