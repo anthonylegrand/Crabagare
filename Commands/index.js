@@ -28,4 +28,6 @@ module.exports = (client) => {
 
   if (process.argv.includes("--deploy-commands"))
     require("./../scripts/deploy-commands")(commands);
+
+  return commands;
 };
