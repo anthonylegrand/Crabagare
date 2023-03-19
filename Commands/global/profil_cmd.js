@@ -1,6 +1,7 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const DATABASE = require("../../database");
 const { Utilisateurs, Villages } = DATABASE.models;
+const { EmbedUtils, EMBED_COLOR } = require("../../embedsUtils");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -15,34 +16,28 @@ module.exports = {
     const OPTION_USER = interaction.options.getUser("utilisateur");
     const PROFIL = await getUtilisateur(interaction.user.id, OPTION_USER?.id);
 
-    const embed = new EmbedBuilder()
-      .setThumbnail((OPTION_USER || interaction.user).avatarURL())
-      .setDescription("\u200B")
-      .setTimestamp();
+    const embed = new EmbedUtils({
+      interaction,
+      profilThumbnail: true,
+    }).setDescription("\u200B");
 
     if (PROFIL) {
       embed
-        .setColor("#27ae60")
-        .setTitle(
-          "🚀  Profile de " +
-            (OPTION_USER?.username || interaction.user.username)
-        )
+        .setColor(EMBED_COLOR.GREEN)
+        .setTitle("🚀 Profile de %username%")
         .addFields(
           {
-            name: "Pinces :",
-            value: "🦀 **" + PROFIL.pinces.toString() + "**",
+            Pinces: "🦀 **" + PROFIL.pinces.toString() + "**",
+            Villages: "🏛️ **" + PROFIL.villagesCount.toString() + "**",
           },
-          {
-            name: "Villages :",
-            value: "🏛️ **" + PROFIL.villagesCount.toString() + "**",
-          }
+          [0, 1]
         );
     } else {
       embed
-        .setColor("#c0392b")
-        .setTitle("🚨  " + (OPTION_USER?.username || interaction.user.username))
+        .setColor(EMBED_COLOR.RED)
+        .setTitle("🚨 %username%")
         .setDescription(
-          `Oups, ${OPTION_USER?.tag || interaction.user} ${
+          `Oups, %username% ${
             OPTION_USER ? "" : " tu"
           } ne joue pas pour le moment !\n${
             OPTION_USER ? "Il " : "Tu"
@@ -50,13 +45,7 @@ module.exports = {
         );
     }
 
-    if (OPTION_USER)
-      embed.setFooter({
-        text: "Profil demandé par " + interaction.user.username,
-        iconURL: interaction.user.avatarURL(),
-      });
-
-    interaction.reply({ embeds: [embed] });
+    interaction.reply({ embeds: [embed.getEmbed()] });
   },
 };
 

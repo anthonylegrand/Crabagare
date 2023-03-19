@@ -1,6 +1,7 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const DATABASE = require("../../database");
 const { Villages } = DATABASE.models;
+const { EmbedUtils, EMBED_COLOR } = require("../../embedsUtils");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -16,37 +17,45 @@ module.exports = {
     const GUILD_ID = interaction.guild.id;
     const NEW_NAME = interaction.options.getString("nouveau_nom");
 
-    let result = await Villages.update(
-      {
-        nom: NEW_NAME,
-      },
-      {
-        where: {
-          UtilisateurDiscordId: interaction.user.id,
-          discord_serveur_id: GUILD_ID,
-        },
-        limit: 1,
-      }
+    const result = await updateVillageName(
+      NEW_NAME,
+      interaction.user.id,
+      GUILD_ID
     );
 
-    const embed = new EmbedBuilder()
-      .setThumbnail(interaction.user.avatarURL())
-      .setDescription("\u200B")
-      .setTimestamp();
+    const embed = new EmbedUtils({
+      interaction,
+      profilThumbnail: true,
+    }).setDescription("\u200B");
 
     if (result[0])
       embed
-        .setColor("#27ae60")
-        .setTitle("✅ Village de " + interaction.user.username)
+        .setColor(EMBED_COLOR.GREEN)
+        .setTitle("✅ Village de %username%")
         .setDescription(
           `Le village vient d'être renomé: \n 🔨 **${NEW_NAME}**`
         );
     else
       embed
-        .setColor("#c0392b")
-        .setTitle("🚨  " + interaction.user.username)
+        .setColor(EMBED_COLOR.RED)
+        .setTitle("🚨  %username%")
         .setDescription(`Impossible de modifier le nom de ton village`);
 
-    interaction.reply({ embeds: [embed] });
+    interaction.reply({ embeds: [embed.getEmbed()] });
   },
 };
+
+async function updateVillageName(NEW_NAME, USER_ID, GUILD_ID) {
+  return Villages.update(
+    {
+      nom: NEW_NAME,
+    },
+    {
+      where: {
+        UtilisateurDiscordId: USER_ID,
+        discord_serveur_id: GUILD_ID,
+      },
+      limit: 1,
+    }
+  );
+}

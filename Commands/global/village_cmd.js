@@ -1,6 +1,12 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const DATABASE = require("../../database");
 const { Utilisateurs, Villages } = DATABASE.models;
+const {
+  EmbedUtils,
+  EMBED_COLOR,
+  DEFAULT_AUTHOR,
+  AHTHOR_ICON_URL,
+} = require("../../embedsUtils");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,40 +26,43 @@ module.exports = {
       OPTION_USER?.id
     );
 
-    const embed = new EmbedBuilder()
-      .setThumbnail((OPTION_USER || interaction.user).avatarURL())
-      .setDescription("\u200B")
-      .setTimestamp();
+    const embed = new EmbedUtils({
+      interaction,
+      profilThumbnail: true,
+    }).setDescription("\u200B");
 
     if (VILLAGE) {
       embed
-        .setColor("#27ae60")
-        .setTitle(
-          "🚀  Village de " +
-            (OPTION_USER?.username || interaction.user.username)
+        .setColor(EMBED_COLOR.GREEN)
+        .setTitle("🚀 Village de %username%")
+        .addFields(
+          {
+            "Nom du Village": VILLAGE.nom || "N/A",
+            Niveau: "🥇 " + VILLAGE.niveau,
+            Coquillage: "🐚 " + VILLAGE.coquillage,
+          },
+          [1, 2]
         );
-      embedAddFields(embed, {
-        "Nom du Village": VILLAGE.nom || "N/A",
-        Niveau: "🥇 " + VILLAGE.niveau,
-        Coquillage: "🐚 " + VILLAGE.coquillage,
-      });
     } else
       embed
-        .setColor("#c0392b")
-        .setTitle("🚨  " + (OPTION_USER?.username || interaction.user.username))
+        .setColor(EMBED_COLOR.RED)
+        .setTitle("🚨  %username%")
         .setDescription(
           `Oups, ${OPTION_USER.tag}, ne joue pas pour le moment !\nIl  peux commencer à jouer en utilisant la commande /village`
         );
 
-    if (OPTION_USER)
-      embed.setFooter({
-        text: "Profil demandé par " + interaction.user.username,
-        iconURL: interaction.user.avatarURL(),
+    if (new Date(VILLAGE.createdAt) > new Date(Date.now() - 1000 * 4))
+      interaction.reply({
+        embeds: [getEmbedCreation(interaction).getEmbed(), embed.getEmbed()],
       });
-
-    interaction.reply({ embeds: [embed] });
+    else
+      interaction.reply({
+        embeds: [embed.getEmbed()],
+      });
   },
 };
+
+/* DATABASE REQUESTS */
 
 async function getVillage(GUILD_ID, USER_ID, OTHER_USER_ID) {
   const VILLAGE = await Villages.findOne({
@@ -90,10 +99,16 @@ async function hasProfil(USER_ID) {
   });
 }
 
-function embedAddFields(embed, infos) {
-  let fields = [];
-  Object.keys(infos).map((key, i) =>
-    fields.push({ name: key, value: infos[key].toString(), inline: i !== 0 })
-  );
-  embed.addFields(fields);
+function getEmbedCreation(interaction) {
+  return new EmbedUtils({
+    interaction,
+    title: "Bienvenue dans le jeux **Crabaggare**",
+    color: EMBED_COLOR.ORANGE,
+    profilThumbnail: false,
+  })
+    .setDescription(
+      "Ton village vient d'être créer.\n\nTu peux utiliser la commande **/aide** pour voire la liste des commandes."
+    )
+    .setAuthor(DEFAULT_AUTHOR)
+    .setThumbnail(AHTHOR_ICON_URL);
 }
