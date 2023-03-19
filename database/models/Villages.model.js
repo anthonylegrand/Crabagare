@@ -20,7 +20,7 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(20),
         allowNull: true,
         validate: {
-          is: /^[A-Za-z0-9]{3,20}$/,
+          is: /^[A-Za-z0-9 ]{3,20}$/,
         },
       },
       coquillage: {
