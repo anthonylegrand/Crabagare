@@ -1,6 +1,8 @@
 const { EmbedBuilder } = require("discord.js");
+const DATABASE = require("./database");
+const { ErrorsReport } = DATABASE.models;
 
-module.exports.EMBED_COLOR = {
+const EMBED_COLOR = {
   GREEN: "#27ae60",
   RED: "#c0392b",
   ORANGE: "#d35400",
@@ -8,14 +10,28 @@ module.exports.EMBED_COLOR = {
 
 const AHTHOR_ICON_URL =
   "https://imgs.search.brave.com/ay6VVbHwluUX9Sh8tSmDCpgDBo_YIzzld8y1hvJoqfY/rs:fit:474:225:1/g:ce/aHR0cHM6Ly90c2Ux/Lm1tLmJpbmcubmV0/L3RoP2lkPU9JUC4t/bW1GYlBGcWJfRXps/UXpnSS13Rjh3SGFI/YSZwaWQ9QXBp";
-module.exports.AHTHOR_ICON_URL = AHTHOR_ICON_URL;
 
-module.exports.DEFAULT_AUTHOR = {
+const DEFAULT_AUTHOR = {
   name: "Crabaggare",
   iconURL: AHTHOR_ICON_URL,
   url: "https://search.brave.com/images?q=gros+chien+moche+et+gras&source=web",
 };
-module.exports.EmbedUtils = class EmbedUtils {
+
+function embedError(error, source, discord_serveur_id) {
+  ErrorsReport.create({
+    discord_serveur_id,
+    source,
+    errorMessage: error.toString(),
+    error: JSON.stringify({ ...error }),
+  });
+
+  return new EmbedUtils({
+    title: "Une Erreur System est survenue",
+    color: EMBED_COLOR.RED,
+  });
+}
+
+class EmbedUtils {
   constructor(options) {
     const { interaction, title, color, profilThumbnail } = options;
     this.embed = new EmbedBuilder().setTimestamp();
@@ -89,11 +105,18 @@ module.exports.EmbedUtils = class EmbedUtils {
   _stringToValue(str) {
     return str.replace(
       "%username%",
-      this._optionUser?.username || this._user.username
+      this._optionUser?.username || this._user?.username
     );
   }
 
   getEmbed() {
     return this.embed;
   }
+}
+module.exports = {
+  EmbedUtils,
+  EMBED_COLOR,
+  AHTHOR_ICON_URL,
+  DEFAULT_AUTHOR,
+  embedError,
 };

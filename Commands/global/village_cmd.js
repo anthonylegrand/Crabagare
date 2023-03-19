@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const DATABASE = require("../../database");
-const { Utilisateurs, Villages } = DATABASE.models;
+const { Utilisateurs, embedError, Villages } = DATABASE.models;
 const {
   EmbedUtils,
   EMBED_COLOR,
@@ -18,47 +18,55 @@ module.exports = {
         .setDescription("Afficher le village d'un autre utilisateur")
     ),
   async execute(interaction) {
-    const GUILD_ID = interaction.guild.id;
-    const OPTION_USER = interaction.options.getUser("utilisateur");
-    const VILLAGE = await getVillage(
-      GUILD_ID,
-      interaction.user.id,
-      OPTION_USER?.id
-    );
+    try {
+      const GUILD_ID = interaction.guild.id;
+      const OPTION_USER = interaction.options.getUser("utilisateur");
+      const VILLAGE = await getVillage(
+        GUILD_ID,
+        interaction.user.id,
+        OPTION_USER?.id
+      );
 
-    const embed = new EmbedUtils({
-      interaction,
-      profilThumbnail: true,
-    }).setDescription("\u200B");
+      const embed = new EmbedUtils({
+        interaction,
+        profilThumbnail: true,
+      }).setDescription("\u200B");
 
-    if (VILLAGE) {
-      embed
-        .setColor(EMBED_COLOR.GREEN)
-        .setTitle("🚀 Village de %username%")
-        .addFields(
-          {
-            "Nom du Village": VILLAGE.nom || "N/A",
-            Niveau: "🥇 " + VILLAGE.niveau,
-            Coquillage: "🐚 " + VILLAGE.coquillage,
-          },
-          [1, 2]
-        );
-    } else
-      embed
-        .setColor(EMBED_COLOR.RED)
-        .setTitle("🚨  %username%")
-        .setDescription(
-          `Oups, ${OPTION_USER.tag}, ne joue pas pour le moment !\nIl  peux commencer à jouer en utilisant la commande /village`
-        );
+      if (VILLAGE) {
+        embed
+          .setColor(EMBED_COLOR.GREEN)
+          .setTitle("🚀 Village de %username%")
+          .addFields(
+            {
+              "Nom du Village": VILLAGE.nom || "N/A",
+              Niveau: "🥇 " + VILLAGE.niveau,
+              Coquillage: "🐚 " + VILLAGE.coquillage,
+            },
+            [1, 2]
+          );
+      } else
+        embed
+          .setColor(EMBED_COLOR.RED)
+          .setTitle("🚨  %username%")
+          .setDescription(
+            `Oups, ${OPTION_USER.tag}, ne joue pas pour le moment !\nIl  peux commencer à jouer en utilisant la commande /village`
+          );
 
-    if (new Date(VILLAGE.createdAt) > new Date(Date.now() - 1000 * 4))
-      interaction.reply({
-        embeds: [getEmbedCreation(interaction).getEmbed(), embed.getEmbed()],
+      if (new Date(VILLAGE.createdAt) > new Date(Date.now() - 1000 * 2.5))
+        interaction.reply({
+          embeds: [getEmbedCreation(interaction).getEmbed(), embed.getEmbed()],
+        });
+      else
+        interaction.reply({
+          embeds: [embed.getEmbed()],
+        });
+    } catch (error) {
+      return interaction.reply({
+        embeds: [
+          embedError(error, "/village", interaction.guild.id).getEmbed(),
+        ],
       });
-    else
-      interaction.reply({
-        embeds: [embed.getEmbed()],
-      });
+    }
   },
 };
 
