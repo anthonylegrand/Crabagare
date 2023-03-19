@@ -5,7 +5,8 @@ module.exports = {
     .setName("aide")
     .setDescription("Besoin d'aide pour comprendre le bot ?"),
   async execute(interaction) {
-    await interaction.reply(`Regarde tes DM pour l'aide !`);
+    await interaction.reply(`Regarde tes messages privés pour l'aide !`);
+
     const embedPresentation = createEmbed("Crabaggare")
       .setURL(
         "https://search.brave.com/images?q=gros+chien+moche+et+gras&source=web"
@@ -31,16 +32,6 @@ module.exports = {
     addSection(embedSimple, "/village {?Utilisateur}", [
       " - Affiche les informations de votre village ou celui de la personne recherchée avec toute les informations le concernant.",
     ]);
-
-    const embedMoyen = createEmbed("Commandes moyennes");
-    addSection(embedMoyen, "/profil", ["test1", "test2"]);
-    addSection(embedMoyen, "/village", ["test1", "test2"]);
-    addSection(embedMoyen, "/crabe", ["test1", "test2"]);
-
-    const embedComplexe = createEmbed("Commandes complexes");
-    addSection(embedComplexe, "/profil", ["test1", "test2"]);
-    addSection(embedComplexe, "/village", ["test1", "test2"]);
-    addSection(embedComplexe, "/crabe", ["test1", "test2"]);
 
     interaction.user.send({
       embeds: [embedPresentation, embedSimple],
