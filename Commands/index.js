@@ -4,7 +4,7 @@ const path = require("path");
 
 module.exports = (client) => {
   let commands = [];
-  ["global"].map((folder) => {
+  ["global", "village"].map((folder) => {
     // Generate All CMD folders path
     const commandsPath = path.join(__dirname, folder);
     const commandFiles = fs
