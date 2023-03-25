@@ -6,6 +6,7 @@ const EMBED_COLOR = {
   GREEN: "#27ae60",
   RED: "#c0392b",
   ORANGE: "#d35400",
+  PURPLE: "#8e44ad",
 };
 
 const AHTHOR_ICON_URL =
@@ -66,6 +67,11 @@ class EmbedUtils {
     return this;
   }
 
+  setImage(img_link) {
+    this.embed.setImage(img_link);
+    return this;
+  }
+
   setThumbnail(img_link) {
     this.embed.setThumbnail(img_link);
     return this;
@@ -91,6 +97,15 @@ class EmbedUtils {
       })
     );
     this.embed.addFields(fields);
+    return this;
+  }
+
+  setFooter(text, iconURL) {
+    if (!this._optionUser)
+      this.embed.setFooter({
+        text: this._stringToValue(text),
+        iconURL,
+      });
     return this;
   }
 

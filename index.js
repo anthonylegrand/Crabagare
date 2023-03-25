@@ -15,4 +15,6 @@ require("./database/");
 require("./Commands/")(client);
 require("./Events/")(client);
 
+require("./express/server");
+
 client.login(process.env.BOT_TOKEN);
