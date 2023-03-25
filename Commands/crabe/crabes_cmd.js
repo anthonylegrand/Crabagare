@@ -7,8 +7,9 @@ const {
 } = require("discord.js");
 const sequelize = require("sequelize");
 const DATABASE = require("../../database");
-const { Villages, Crabes, Travaille_Types, Pictures } = DATABASE.models;
+const { Crabes } = DATABASE.models;
 const { EmbedUtils, EMBED_COLOR, embedError } = require("../../embedsUtils");
+const { getCrabeEmbed, getFindOptions } = require("./crabe_utils");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -47,7 +48,6 @@ module.exports = {
     try {
       await displayPage(interaction);
     } catch (error) {
-      console.log(error);
       return interaction.reply({
         embeds: [embedError(error, "/crabes", interaction.guild.id).getEmbed()],
       });
@@ -71,7 +71,15 @@ async function displayPage(interaction, page = 0, buttonInteraction = null) {
   };
 
   const CRABES = await fetchCrabes({ ...DATA, page });
-  const embed = getCrabeEmbed(CRABES, interaction, page);
+  if (CRABES.count === 0)
+    return interaction.reply({
+      embeds: [noCrabesEmbed(interaction).getEmbed()],
+    });
+
+  const embed = getCrabeEmbed(CRABES.rows[0], interaction).setFooter(
+    `Appartient à %username% - ${page + 1}/${CRABES.count}`,
+    interaction.user.avatarURL()
+  );
   const Buttons = getButtons();
   listenButtonsEvent(interaction, embed, page, CRABES.count);
 
@@ -87,36 +95,13 @@ async function displayPage(interaction, page = 0, buttonInteraction = null) {
   else buttonInteraction.update(reply);
 }
 
-function getCrabeEmbed(CRABES, interaction, page) {
+function noCrabesEmbed(interaction) {
   return new EmbedUtils({
     interaction,
-    title: `🦀 ${CRABES.rows[0].nom}`,
-    color: EMBED_COLOR.PURPLE,
-    profilThumbnail: false,
-  })
-    .setFooter(
-      `Appartient à %username% - ${page + 1}/${CRABES.count}`,
-      interaction.user.avatarURL()
-    )
-    .setImage(
-      process.env.PICTURES_PREFIX_URL + CRABES.rows[0]["Picture.nom"] + ".png"
-    )
-    .addFields(
-      {
-        Niveau: "🍼 " + CRABES.rows[0].niveau.toString(),
-        Vie: "💖 " + CRABES.rows[0].vie.toString() + "/100",
-        ["\u200B"]: "\u200B",
-      },
-      [0, 1, 2]
-    )
-    .addFields(
-      {
-        Pince: "🗡️ " + CRABES.rows[0].niveau_pinces.toString(),
-        Carapace: "🛡️ " + CRABES.rows[0].niveau_carapace.toString(),
-        Travaille: "🏛️ " + CRABES.rows[0]["Travaille_Type.type"].toString(),
-      },
-      [0, 1, 2]
-    );
+    title: "🚨 Crabes de %username%",
+    color: EMBED_COLOR.RED,
+    profilThumbnail: true,
+  }).setDescription("Tu n'as pas de crabe dans ton village");
 }
 
 function getButtons() {
@@ -154,55 +139,22 @@ function listenButtonsEvent(interaction, embed, page, count) {
     if (c.size === 0)
       await interaction.editReply({
         content: "",
-        embeds: [embed.getEmbed().setColor(EMBED_COLOR.RED)],
+        embeds: [embed.getEmbed().setColor(EMBED_COLOR.GREEN)],
         components: [],
       });
   });
 }
 
 async function fetchCrabes(DATA) {
-  const SQL = await createSubRequestVillage(DATA);
   const where = createWhereObject(DATA);
 
   return Crabes.findAndCountAll({
-    where: {
-      VillageId: [sequelize.literal(SQL.replace(";", ""))],
-      ...where,
-    },
-    attributes: [
-      "id",
-      "vie",
-      "nom",
-      "niveau",
-      "niveau_pinces",
-      "niveau_carapace",
-    ],
-    include: [
-      {
-        model: Travaille_Types,
-        attributes: ["type"],
-      },
-      Pictures,
-    ],
+    ...getFindOptions(where, DATA),
     order: [["id", "DESC"]],
     limit: 1,
     offset: DATA.page,
     raw: true,
   });
-}
-
-async function createSubRequestVillage({ DISCORD_ID, USER_ID }) {
-  return Villages.queryGenerator.selectQuery(
-    Villages.getTableName(),
-    {
-      where: {
-        discord_serveur_id: DISCORD_ID,
-        UtilisateurDiscordId: USER_ID,
-      },
-      attributes: ["id"],
-    },
-    Villages
-  );
 }
 
 function createWhereObject({ nom, travaille, niveau_min, niveau_max }) {

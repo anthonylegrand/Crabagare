@@ -12,6 +12,7 @@ module.exports = (client) => {
 
     // Get all commands paths on folders
     for (const file of commandFiles) {
+      if (!file.includes("_cmd")) continue;
       const filePath = path.join(commandsPath, file);
       const command = require(filePath);
 
