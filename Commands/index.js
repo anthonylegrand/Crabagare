@@ -1,10 +1,9 @@
-require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 
 module.exports = (client) => {
   let commands = [];
-  ["global", "village"].map((folder) => {
+  ["global", "village", "crabe"].map((folder) => {
     // Generate All CMD folders path
     const commandsPath = path.join(__dirname, folder);
     const commandFiles = fs
