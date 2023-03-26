@@ -16,6 +16,15 @@ module.exports = (sequelize) => {
           is: /^[A-Za-z0-9]{3,20}$/,
         },
       },
+      vie: {
+        type: DataTypes.INTEGER,
+        defaultValue: 100,
+        allowNull: false,
+        validate: {
+          min: 1,
+          max: 100,
+        },
+      },
       niveau: {
         type: DataTypes.INTEGER,
         defaultValue: 1,

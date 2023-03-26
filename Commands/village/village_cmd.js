@@ -1,11 +1,12 @@
 const { SlashCommandBuilder } = require("discord.js");
 const DATABASE = require("../../database");
-const { Utilisateurs, embedError, Villages } = DATABASE.models;
+const { Utilisateurs, Villages, Crabes } = DATABASE.models;
 const {
   EmbedUtils,
   EMBED_COLOR,
   DEFAULT_AUTHOR,
   AHTHOR_ICON_URL,
+  embedError,
 } = require("../../embedsUtils");
 
 module.exports = {
@@ -41,8 +42,9 @@ module.exports = {
               "Nom du Village": VILLAGE.nom || "N/A",
               Niveau: "🥇 " + VILLAGE.niveau,
               Coquillage: "🐚 " + VILLAGE.coquillage,
+              Crabes: "🦀 " + VILLAGE.crabesCount || 0,
             },
-            [1, 2]
+            [1, 2, 3]
           );
       } else
         embed
@@ -78,7 +80,19 @@ async function getVillage(GUILD_ID, USER_ID, OTHER_USER_ID) {
       UtilisateurDiscordId: OTHER_USER_ID || USER_ID,
       discord_serveur_id: GUILD_ID,
     },
-    include: Utilisateurs,
+    attributes: {
+      include: [
+        [DATABASE.fn("COUNT", DATABASE.col("Crabes.id")), "crabesCount"],
+      ],
+    },
+    include: [
+      {
+        model: Crabes,
+        attributes: [],
+      },
+    ],
+    group: ["Villages.id"],
+    subQuery: false,
     raw: true,
   });
 
