@@ -58,11 +58,9 @@ module.exports = {
           }
         } else {
           const NOW = new Date(Date.now()).getTime();
-          const date =
-            new Date(VILLAGE.adoption_cmd).getTime() +
-            60 * 60 * 1000 -
-            NOW +
-            NOW;
+          const DISPO_DANS =
+            new Date(VILLAGE.adoption_cmd).getTime() + 60 * 60 * 1000 - NOW;
+          const date = DISPO_DANS + NOW;
 
           const tropTôt = new EmbedUtils({
             interaction,
@@ -73,9 +71,16 @@ module.exports = {
             color: EMBED_COLOR.ORANGE,
             profilThumbnail: false,
           });
-          return interaction.reply({
-            embeds: [tropTôt.getEmbed()],
-          });
+          return interaction
+            .reply({
+              embeds: [tropTôt.getEmbed()],
+            })
+            .then((m) =>
+              setTimeout(
+                () => m.delete(),
+                DISPO_DANS < 60000 ? DISPO_DANS : 60000
+              )
+            );
         }
       } else {
         const creerTonVillage = new EmbedUtils({
