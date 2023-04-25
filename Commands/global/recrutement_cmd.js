@@ -1,7 +1,9 @@
 const { SlashCommandBuilder } = require("discord.js");
 const DATABASE = require("../../database");
-const { Villages, Crabes } = DATABASE.models;
+const { faker } = require("@faker-js/faker");
+const { Villages, Crabes, Pictures } = DATABASE.models;
 const { EmbedUtils, embedError, EMBED_COLOR } = require("../../embedsUtils");
+const CHANCE = 70;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,7 +19,6 @@ module.exports = {
         },
         raw: true,
       });
-
       const dateActuelleMoins1Heure = new Date(Date.now() - 60 * 60 * 1000);
       if (VILLAGE) {
         if (VILLAGE.adoption_cmd < dateActuelleMoins1Heure) {
@@ -34,7 +35,7 @@ module.exports = {
             }
           );
           if (youWinCrab()) {
-            createCrab(interaction.user.v);
+            const crabe = await createCrab(VILLAGE.id);
 
             const gagneCrabe = new EmbedUtils({
               interaction,
@@ -95,7 +96,6 @@ module.exports = {
         });
       }
     } catch (error) {
-      console.log(error);
       return interaction.reply({
         embeds: [
           embedError(error, "/recrutement", interaction.guild.id).getEmbed(),
@@ -113,10 +113,24 @@ function getRandomInt(min, max) {
 
 function youWinCrab() {
   const randomInt = getRandomInt(0, 100);
-  console.log(randomInt);
-  return randomInt < 70;
+  return randomInt < CHANCE;
+}
+
+async function getImage() {
+  const randomItem = await Pictures.findOne({
+    order: DATABASE.random(),
+    raw: true,
+  });
+
+  return randomItem;
 }
 
 async function createCrab(villageid) {
-  return Crabes.create({ VillagesId: villageid, nom: "Franzou" });
+  const myImage = await getImage();
+  return Crabes.create({
+    VillageId: villageid,
+    nom: faker.name.firstName(),
+    PictureId: myImage.id,
+    TravailleTypeId: 1,
+  });
 }
