@@ -3,8 +3,7 @@ const DATABASE = require("../../database");
 const { faker } = require("@faker-js/faker");
 const { Villages, Crabes, Pictures } = DATABASE.models;
 const { EmbedUtils, embedError, EMBED_COLOR } = require("../../embedsUtils");
-const CHANCE = 70;
-
+const CHANCE = 50;
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("recrutement")
@@ -21,6 +20,7 @@ module.exports = {
       });
       const dateActuelleMoins1Heure = new Date(Date.now() - 60 * 60 * 1000);
       if (VILLAGE) {
+        const levelVillage = VILLAGE.niveau;
         if (VILLAGE.adoption_cmd < dateActuelleMoins1Heure) {
           Villages.update(
             {
@@ -34,7 +34,7 @@ module.exports = {
               limit: 1,
             }
           );
-          if (youWinCrab()) {
+          if (youWinCrab(levelVillage)) {
             const crabe = await createCrab(VILLAGE.id);
 
             const gagneCrabe = new EmbedUtils({
@@ -111,9 +111,9 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function youWinCrab() {
+function youWinCrab(levelVillage) {
   const randomInt = getRandomInt(0, 100);
-  return randomInt < CHANCE;
+  return randomInt < CHANCE + levelVillage;
 }
 
 async function getImage() {
